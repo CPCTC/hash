@@ -50,6 +50,7 @@ typedef struct {
     struct data {
         bool filled;
         void *key, *val;
+        struct data *prev;
         struct data *next;
     } *data;
 } Hash;
@@ -120,19 +121,26 @@ int hash_set(HASH htable, void *key, void *val) {
             if (rehash(table))
                 return 1;
 
+        struct data *prev = NULL;
         struct data *next = NULL;
-        struct data *d = &(table->data[it.index]);
-        if (table->data[it.index].filled) {
-            next = malloc(sizeof (struct data));
-            if (!next)
+        struct data *new = &(table->data[it.index]);
+        if (new->filled) {
+            struct data *old = new;
+            new = malloc(sizeof (struct data));
+            if (!new)
                 return 1;
-            *next = *d;
+            prev = old;
+            next = old->next;
+            old->next = new;
+            if (next)
+                next->prev = new;
         }
 
-        d->filled = 1;
-        d->key = key;
-        d->val = val;
-        d->next = next;
+        new->filled = 1;
+        new->key = key;
+        new->val = val;
+        new->prev = prev;
+        new->next = next;
 
         table->elts++;
     }
