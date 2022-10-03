@@ -87,20 +87,24 @@ HASH hash_init(uint32_t size_hint, float thresh, HASH_eq_fn *eq, HASH_fn *hash) 
         hash = default_hash;
 
     Hash *table = malloc(sizeof(Hash));
-    if (table) {
-        table->locked = 0;
-        table->elts = 0;
-        table->buckets = (size_hint + 1) / thresh;
-        table->thresh = thresh;
-        table->eq = eq;
-        table->hash = hash;
-        if (!(table->data = calloc(table->buckets, sizeof (struct data)))) {
-            free(table);
-            return NULL;
-        }
-    }
+    if (!table) goto err_0;
+    table->locked = 0;
+    table->elts = 0;
+    table->buckets = (size_hint + 1) / thresh;
+    if (!table->buckets) goto err_1;
+    table->thresh = thresh;
+    table->eq = eq;
+    table->hash = hash;
+    if (!(table->data = calloc(table->buckets, sizeof (struct data))))
+        goto err_2;
 
     return (HASH) table;
+
+err_2:
+err_1:
+    free(table);
+err_0:
+    return NULL;
 }
 
 uint32_t hash_size(HASH htable) {
