@@ -60,6 +60,13 @@ int hash_set(HASH table, void *key, void *val);
 ```
 Add an element with key *key* and value *val* to the hash table *table*. Or, if *table* already contains an element with key *key*, instead set the element's value to *val*. Will fail if *table* has any active iterators, or a rehash was triggered but did not succeed. Returns 1 on failure, and 0 otherwise.
 
+Function `hash_unset`:
+---
+```c
+int hash_unset(HASH table, void *key);
+```
+Remove the element with key *key* from *table*, if it exists. Will fail if *table* has any active iterators. Returns 1 on failure, and 0 otherwise.
+
 Function `hash_get`:
 ---
 ```c

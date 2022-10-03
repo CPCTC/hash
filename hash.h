@@ -22,6 +22,7 @@ HASH hash_init(uint32_t size, float thresh, HASH_eq_fn *eq, HASH_fn *hash);
 
 uint32_t hash_size(HASH table);
 int hash_set(HASH table, void *key, void *val);
+int hash_unset(HASH table, void *key);
 int hash_get(HASH table, void *key, void **val);
 
 HASH_ITER hash_begin(HASH table);
@@ -147,6 +148,26 @@ int hash_set(HASH htable, void *key, void *val) {
     else
         it.d->val = val;
 
+    return 0;
+}
+
+int hash_unset(HASH htable, void *key) {
+    Hash *table = htable;
+
+    if (table->locked)
+        return 1;
+
+    Iter it;
+    if (lookup(table, key, &it))
+        return 0;
+    else if (it.d->prev) {
+        it.d->prev->next = it.d->next;
+        if (it.d->next)
+            it.d->next->prev = it.d->prev;
+        free(it.d);
+    }
+    else
+        it.d->filled = 0;
     return 0;
 }
 
