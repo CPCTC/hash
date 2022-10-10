@@ -1,38 +1,52 @@
 // Copyright (c) 2022 Seth Galasso
 // SPDX-License-Identifier: MIT
 
-#pragma once
+#ifdef HASH_NAME
+#ifdef HASH_KEY_TYPE
+#ifdef HASH_VAL_TYPE
 
 //
 // Header
 //
+
+#define HASH_CONC_IMPL(a,b) a ## b
+#define HASH_CONC(a,b) HASH_CONC_IMPL(a,b)
 
 #include <stdbool.h>
 #include <stdint.h>
 
 // Types
 
+#define HASH HASH_NAME
 typedef void *HASH;
+#define HASH_ITER HASH_CONC(HASH_NAME,_ITER)
 typedef void *HASH_ITER;
-
-typedef bool HASH_eq_fn(void *a, void *b);
-typedef uint32_t HASH_fn(void *obj, uint32_t maxhash);
 
 // Interface
 
-HASH hash_init_default(void);
-HASH hash_init(uint32_t size, float thresh, HASH_eq_fn *eq, HASH_fn *hash);
+#define HASH_init_default HASH_CONC(HASH_NAME,_init_default)
+HASH HASH_init_default(void);
+#define HASH_init HASH_CONC(HASH_NAME,_init)
+HASH HASH_init(uint32_t size, float thresh);
 
-uint32_t hash_size(HASH table);
-int hash_set(HASH table, void *key, void *val);
-int hash_unset(HASH table, void *key);
-int hash_get(HASH table, void *key, void **val);
+#define HASH_size HASH_CONC(HASH_NAME,_size)
+uint32_t HASH_size(HASH table);
+#define HASH_set HASH_CONC(HASH_NAME,_set)
+int HASH_set(HASH table, HASH_KEY_TYPE key, HASH_VAL_TYPE val);
+#define HASH_unset HASH_CONC(HASH_NAME,_unset)
+int HASH_unset(HASH table, HASH_KEY_TYPE key);
+#define HASH_get HASH_CONC(HASH_NAME,_get)
+int HASH_get(HASH table, HASH_KEY_TYPE key, HASH_VAL_TYPE *val);
 
-HASH_ITER hash_begin(HASH table);
-bool hash_next(HASH_ITER iterator, void **key, void **val);
-void hash_end(HASH_ITER *iterator);
+#define HASH_begin HASH_CONC(HASH_NAME,_begin)
+HASH_ITER HASH_begin(HASH table);
+#define HASH_next HASH_CONC(HASH_NAME,_next)
+bool HASH_next(HASH_ITER iterator, HASH_KEY_TYPE *key, HASH_VAL_TYPE *val);
+#define HASH_end HASH_CONC(HASH_NAME,_end)
+void HASH_end(HASH_ITER *iterator);
 
-void hash_free(HASH *table);
+#define HASH_free HASH_CONC(HASH_NAME,_free)
+void HASH_free(HASH *table);
 
 //
 // Implementation
@@ -49,11 +63,10 @@ typedef struct {
     uint32_t elts;
     uint32_t buckets;
     float thresh;
-    HASH_eq_fn *eq;
-    HASH_fn *hash;
     struct data {
         bool filled;
-        void *key, *val;
+        HASH_KEY_TYPE key;
+        HASH_VAL_TYPE val;
         struct data *prev;
         struct data *next;
     } *data;
@@ -67,27 +80,23 @@ typedef struct {
 
 // Declarations
 
-static HASH_eq_fn default_eq;
-static HASH_fn default_hash;
+static bool hash_eq(HASH_KEY_TYPE a, HASH_KEY_TYPE b);
+static uint32_t hash_fn(HASH_KEY_TYPE obj, uint32_t maxhash);
 static int rehash(Hash *table);
-static int lookup(Hash *table, void *key, Iter *ret);
+static int lookup(Hash *table, HASH_KEY_TYPE key, Iter *ret);
 static void hash_free_impl(Hash *table);
 
 // Definitions
 
-HASH hash_init_default(void) {
-    return hash_init(0, 0.0f, NULL, NULL);
+HASH HASH_init_default(void) {
+    return HASH_init(0, 0.0f);
 }
 
-HASH hash_init(uint32_t size_hint, float thresh, HASH_eq_fn *eq, HASH_fn *hash) {
+HASH HASH_init(uint32_t size_hint, float thresh) {
     if (size_hint == 0)
         size_hint = 16;
     if (thresh <= 0.0f)
         thresh = 0.8f;
-    if (!eq)
-        eq = default_eq;
-    if (!hash)
-        hash = default_hash;
 
     Hash *table = malloc(sizeof(Hash));
     if (!table) goto err_0;
@@ -96,8 +105,6 @@ HASH hash_init(uint32_t size_hint, float thresh, HASH_eq_fn *eq, HASH_fn *hash) 
     table->buckets = (size_hint + 1) / thresh;
     if (!table->buckets) goto err_1;
     table->thresh = thresh;
-    table->eq = eq;
-    table->hash = hash;
     if (!(table->data = calloc(table->buckets, sizeof (struct data))))
         goto err_2;
 
@@ -110,13 +117,13 @@ err_0:
     return NULL;
 }
 
-uint32_t hash_size(HASH htable) {
+uint32_t HASH_size(HASH htable) {
     Hash *table = htable;
 
     return table->elts;
 }
 
-int hash_set(HASH htable, void *key, void *val) {
+int HASH_set(HASH htable, HASH_KEY_TYPE key, HASH_VAL_TYPE val) {
     Hash *table = htable;
 
     if (table->locked)
@@ -158,7 +165,7 @@ int hash_set(HASH htable, void *key, void *val) {
     return 0;
 }
 
-int hash_unset(HASH htable, void *key) {
+int HASH_unset(HASH htable, HASH_KEY_TYPE key) {
     Hash *table = htable;
 
     if (table->locked)
@@ -178,7 +185,7 @@ int hash_unset(HASH htable, void *key) {
     return 0;
 }
 
-int hash_get(HASH htable, void *key, void **val) {
+int HASH_get(HASH htable, HASH_KEY_TYPE key, HASH_VAL_TYPE *val) {
     Hash *table = htable;
 
     Iter it;
@@ -189,7 +196,7 @@ int hash_get(HASH htable, void *key, void **val) {
     return ret;
 }
 
-HASH_ITER hash_begin(HASH htable) {
+HASH_ITER HASH_begin(HASH htable) {
     Hash *table = htable;
 
     Iter *it = malloc(sizeof (Iter));
@@ -202,7 +209,7 @@ HASH_ITER hash_begin(HASH htable) {
     return it;
 }
 
-bool hash_next(HASH_ITER iterator, void **key, void **val) {
+bool HASH_next(HASH_ITER iterator, HASH_KEY_TYPE *key, HASH_VAL_TYPE *val) {
     Iter *it = iterator;
 
     while (it->index < it->table->buckets) {
@@ -220,38 +227,31 @@ bool hash_next(HASH_ITER iterator, void **key, void **val) {
     return 0;
 }
 
-void hash_end(HASH_ITER *iterator) {
+void HASH_end(HASH_ITER *iterator) {
     Iter *it = *iterator;
     (it->table->locked)--;
     free(it);
     *iterator = NULL;
 }
 
-void hash_free(HASH *ptable) {
+void HASH_free(HASH *ptable) {
     Hash *table = *ptable;
     hash_free_impl(table);
     free(table);
     *ptable = NULL;
 }
 
-bool default_eq(void *a, void *b) {
-    return a == b;
-}
-
-uint32_t default_hash(void *obj, uint32_t maxhash) {
-    return ((uintptr_t) obj) % maxhash;
-}
-
 int rehash(Hash *table) {
-    HASH new = hash_init(table->elts * 2, table->thresh, table->eq, table->hash);
+    HASH new = HASH_init(table->elts * 2, table->thresh);
     if (!new) goto clean_0;
 
-    HASH_ITER it = hash_begin((HASH) table);
+    HASH_ITER it = HASH_begin((HASH) table);
     if (!it) goto clean_1;
-    void *key, *val;
-    while (hash_next(it, &key, &val))
-        if (hash_set(new, key, val)) goto clean_2;
-    hash_end(&it);
+    HASH_KEY_TYPE key;
+    HASH_VAL_TYPE val;
+    while (HASH_next(it, &key, &val))
+        if (HASH_set(new, key, val)) goto clean_2;
+    HASH_end(&it);
 
     Hash *new_table = new;
     hash_free_impl(table);
@@ -261,19 +261,19 @@ int rehash(Hash *table) {
     return 0;
 
 clean_2:
-    hash_end(it);
+    HASH_end(it);
 clean_1:
-    hash_free(&new);
+    HASH_free(&new);
 clean_0:
     return 1;
 }
 
-int lookup(Hash *table, void *key, Iter *ret) {
+int lookup(Hash *table, HASH_KEY_TYPE key, Iter *ret) {
     ret->table = table;
     ret->d = NULL;
-    ret->index = table->hash(key, table->buckets) % table->buckets;
+    ret->index = hash_fn(key, table->buckets) % table->buckets;
     struct data *d = &(table->data[ret->index]);
-    while (!(d->filled) || !(table->eq(d->key, key))) {
+    while (!(d->filled) || !(hash_eq(d->key, key))) {
         d = d->next;
         if (!d)
             return 1;
@@ -295,4 +295,27 @@ void hash_free_impl(Hash *table) {
     free(table->data);
 }
 
-#endif
+#endif // #ifdef HASH_IMPLEMENTATION
+
+#undef HASH_free
+#undef HASH_end
+#undef HASH_next
+#undef HASH_begin
+#undef HASH_get
+#undef HASH_unset
+#undef HASH_set
+#undef HASH_size
+#undef HASH_init
+#undef HASH_init_default
+#undef HASH_ITER
+#undef HASH
+#undef HASH_CONC
+#undef HASH_CONC_IMPL
+
+#undef HASH_VAL_TYPE
+#undef HASH_KEY_TYPE
+#undef HASH_NAME
+
+#endif // #ifdef HASH_VAL_TYPE
+#endif // #ifdef HASH_KEY_TYPE
+#endif // #ifdef HASH_NAME
