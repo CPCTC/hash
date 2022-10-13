@@ -313,10 +313,12 @@ void hash_free_impl(Hash *table) {
 #undef HASH_CONC
 #undef HASH_CONC_IMPL
 
+#ifndef HASH_IMPLEMENTATION
 #undef HASH_VAL_TYPE
 #undef HASH_KEY_TYPE
 #undef HASH_LNAME
 #undef HASH_UNAME
+#endif
 
 #endif // #ifdef HASH_VAL_TYPE
 #endif // #ifdef HASH_KEY_TYPE
