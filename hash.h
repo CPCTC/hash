@@ -1,7 +1,8 @@
 // Copyright (c) 2022 Seth Galasso
 // SPDX-License-Identifier: MIT
 
-#ifdef HASH_NAME
+#ifdef HASH_UNAME
+#ifdef HASH_LNAME
 #ifdef HASH_KEY_TYPE
 #ifdef HASH_VAL_TYPE
 
@@ -17,36 +18,36 @@
 
 // Types
 
-#define HASH HASH_NAME
+#define HASH HASH_UNAME
 typedef void *HASH;
-#define HASH_ITER HASH_CONC(HASH_NAME,_ITER)
+#define HASH_ITER HASH_CONC(HASH_UNAME,_ITER)
 typedef void *HASH_ITER;
 
 // Interface
 
-#define HASH_init_default HASH_CONC(HASH_NAME,_init_default)
-HASH HASH_init_default(void);
-#define HASH_init HASH_CONC(HASH_NAME,_init)
-HASH HASH_init(uint32_t size, float thresh);
+#define hash_init_default HASH_CONC(HASH_LNAME,_init_default)
+HASH hash_init_default(void);
+#define hash_init HASH_CONC(HASH_LNAME,_init)
+HASH hash_init(uint32_t size, float thresh);
 
-#define HASH_size HASH_CONC(HASH_NAME,_size)
-uint32_t HASH_size(HASH table);
-#define HASH_set HASH_CONC(HASH_NAME,_set)
-int HASH_set(HASH table, HASH_KEY_TYPE key, HASH_VAL_TYPE val);
-#define HASH_unset HASH_CONC(HASH_NAME,_unset)
-int HASH_unset(HASH table, HASH_KEY_TYPE key);
-#define HASH_get HASH_CONC(HASH_NAME,_get)
-int HASH_get(HASH table, HASH_KEY_TYPE key, HASH_VAL_TYPE *val);
+#define hash_size HASH_CONC(HASH_LNAME,_size)
+uint32_t hash_size(HASH table);
+#define hash_set HASH_CONC(HASH_LNAME,_set)
+int hash_set(HASH table, HASH_KEY_TYPE key, HASH_VAL_TYPE val);
+#define hash_unset HASH_CONC(HASH_LNAME,_unset)
+int hash_unset(HASH table, HASH_KEY_TYPE key);
+#define hash_get HASH_CONC(HASH_LNAME,_get)
+int hash_get(HASH table, HASH_KEY_TYPE key, HASH_VAL_TYPE *val);
 
-#define HASH_begin HASH_CONC(HASH_NAME,_begin)
-HASH_ITER HASH_begin(HASH table);
-#define HASH_next HASH_CONC(HASH_NAME,_next)
-bool HASH_next(HASH_ITER iterator, HASH_KEY_TYPE *key, HASH_VAL_TYPE *val);
-#define HASH_end HASH_CONC(HASH_NAME,_end)
-void HASH_end(HASH_ITER *iterator);
+#define hash_begin HASH_CONC(HASH_LNAME,_begin)
+HASH_ITER hash_begin(HASH table);
+#define hash_next HASH_CONC(HASH_LNAME,_next)
+bool hash_next(HASH_ITER iterator, HASH_KEY_TYPE *key, HASH_VAL_TYPE *val);
+#define hash_end HASH_CONC(HASH_LNAME,_end)
+void hash_end(HASH_ITER *iterator);
 
-#define HASH_free HASH_CONC(HASH_NAME,_free)
-void HASH_free(HASH *table);
+#define hash_free HASH_CONC(HASH_LNAME,_free)
+void hash_free(HASH *table);
 
 //
 // Implementation
@@ -88,11 +89,11 @@ static void hash_free_impl(Hash *table);
 
 // Definitions
 
-HASH HASH_init_default(void) {
-    return HASH_init(0, 0.0f);
+HASH hash_init_default(void) {
+    return hash_init(0, 0.0f);
 }
 
-HASH HASH_init(uint32_t size_hint, float thresh) {
+HASH hash_init(uint32_t size_hint, float thresh) {
     if (size_hint == 0)
         size_hint = 16;
     if (thresh <= 0.0f)
@@ -117,13 +118,13 @@ err_0:
     return NULL;
 }
 
-uint32_t HASH_size(HASH htable) {
+uint32_t hash_size(HASH htable) {
     Hash *table = htable;
 
     return table->elts;
 }
 
-int HASH_set(HASH htable, HASH_KEY_TYPE key, HASH_VAL_TYPE val) {
+int hash_set(HASH htable, HASH_KEY_TYPE key, HASH_VAL_TYPE val) {
     Hash *table = htable;
 
     if (table->locked)
@@ -165,7 +166,7 @@ int HASH_set(HASH htable, HASH_KEY_TYPE key, HASH_VAL_TYPE val) {
     return 0;
 }
 
-int HASH_unset(HASH htable, HASH_KEY_TYPE key) {
+int hash_unset(HASH htable, HASH_KEY_TYPE key) {
     Hash *table = htable;
 
     if (table->locked)
@@ -185,7 +186,7 @@ int HASH_unset(HASH htable, HASH_KEY_TYPE key) {
     return 0;
 }
 
-int HASH_get(HASH htable, HASH_KEY_TYPE key, HASH_VAL_TYPE *val) {
+int hash_get(HASH htable, HASH_KEY_TYPE key, HASH_VAL_TYPE *val) {
     Hash *table = htable;
 
     Iter it;
@@ -196,7 +197,7 @@ int HASH_get(HASH htable, HASH_KEY_TYPE key, HASH_VAL_TYPE *val) {
     return ret;
 }
 
-HASH_ITER HASH_begin(HASH htable) {
+HASH_ITER hash_begin(HASH htable) {
     Hash *table = htable;
 
     Iter *it = malloc(sizeof (Iter));
@@ -209,7 +210,7 @@ HASH_ITER HASH_begin(HASH htable) {
     return it;
 }
 
-bool HASH_next(HASH_ITER iterator, HASH_KEY_TYPE *key, HASH_VAL_TYPE *val) {
+bool hash_next(HASH_ITER iterator, HASH_KEY_TYPE *key, HASH_VAL_TYPE *val) {
     Iter *it = iterator;
 
     while (it->index < it->table->buckets) {
@@ -227,14 +228,14 @@ bool HASH_next(HASH_ITER iterator, HASH_KEY_TYPE *key, HASH_VAL_TYPE *val) {
     return 0;
 }
 
-void HASH_end(HASH_ITER *iterator) {
+void hash_end(HASH_ITER *iterator) {
     Iter *it = *iterator;
     (it->table->locked)--;
     free(it);
     *iterator = NULL;
 }
 
-void HASH_free(HASH *ptable) {
+void hash_free(HASH *ptable) {
     Hash *table = *ptable;
     hash_free_impl(table);
     free(table);
@@ -242,16 +243,16 @@ void HASH_free(HASH *ptable) {
 }
 
 int rehash(Hash *table) {
-    HASH new = HASH_init(table->elts * 2, table->thresh);
+    HASH new = hash_init(table->elts * 2, table->thresh);
     if (!new) goto clean_0;
 
-    HASH_ITER it = HASH_begin((HASH) table);
+    HASH_ITER it = hash_begin((HASH) table);
     if (!it) goto clean_1;
     HASH_KEY_TYPE key;
     HASH_VAL_TYPE val;
-    while (HASH_next(it, &key, &val))
-        if (HASH_set(new, key, val)) goto clean_2;
-    HASH_end(&it);
+    while (hash_next(it, &key, &val))
+        if (hash_set(new, key, val)) goto clean_2;
+    hash_end(&it);
 
     Hash *new_table = new;
     hash_free_impl(table);
@@ -261,9 +262,9 @@ int rehash(Hash *table) {
     return 0;
 
 clean_2:
-    HASH_end(it);
+    hash_end(it);
 clean_1:
-    HASH_free(&new);
+    hash_free(&new);
 clean_0:
     return 1;
 }
@@ -297,25 +298,27 @@ void hash_free_impl(Hash *table) {
 
 #endif // #ifdef HASH_IMPLEMENTATION
 
-#undef HASH_free
-#undef HASH_end
-#undef HASH_next
-#undef HASH_begin
-#undef HASH_get
-#undef HASH_unset
-#undef HASH_set
-#undef HASH_size
-#undef HASH_init
-#undef HASH_init_default
-#undef HASH_ITER
+#undef hash_free
+#undef hash_end
+#undef hash_next
+#undef hash_begin
+#undef hash_get
+#undef hash_unset
+#undef hash_set
+#undef hash_size
+#undef hash_init
+#undef hash_init_default
+#undef hash_ITER
 #undef HASH
 #undef HASH_CONC
 #undef HASH_CONC_IMPL
 
 #undef HASH_VAL_TYPE
 #undef HASH_KEY_TYPE
-#undef HASH_NAME
+#undef HASH_LNAME
+#undef HASH_UNAME
 
 #endif // #ifdef HASH_VAL_TYPE
 #endif // #ifdef HASH_KEY_TYPE
-#endif // #ifdef HASH_NAME
+#endif // #ifdef HASH_LNAME
+#endif // #ifdef HASH_UNAME
